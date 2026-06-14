@@ -36,6 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleTrackBtn = document.getElementById('toggle-track');
   const calendarView = document.getElementById('calendar-view');
 
+  // Modal Elements
+  const modal = document.getElementById('session-modal');
+  const modalClose = document.getElementById('modal-close');
+  const storyContainer = document.getElementById('modal-story-container');
+  const storyText = document.getElementById('modal-story-text');
+
   // State
   let races = [];
   let currentRaceIndex = 0;
@@ -53,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setupListeners() {
-    // Tabs
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         tabBtns.forEach(b => b.classList.remove('active'));
@@ -64,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Calendar Navigation
     prevRaceBtn.addEventListener('click', () => {
       if (currentRaceIndex > 0) {
         currentRaceIndex--;
@@ -79,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Time Toggle
     toggleLocalBtn.addEventListener('click', () => {
       showLocalTime = true;
       toggleLocalBtn.classList.add('active');
@@ -93,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleLocalBtn.classList.remove('active');
       renderSessionsList();
     });
+
+    modalClose.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
   }
 
   async function fetchRaces() {
@@ -102,14 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
       races = data.MRData.RaceTable.Races;
 
       const now = new Date();
-      
-      // Find the "current" race based on date (first race where Race time is in the future)
       currentRaceIndex = races.findIndex(race => {
         const raceTime = new Date(`${race.date}T${race.time}`);
         return raceTime > now;
       });
 
-      // If season is over, show the last race
       if (currentRaceIndex === -1) currentRaceIndex = races.length - 1;
 
       renderRace(currentRaceIndex);
@@ -124,14 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const race = races[index];
     
-    // Update navigation buttons
     prevRaceBtn.disabled = index === 0;
     nextRaceBtn.disabled = index === races.length - 1;
 
-    // Apply animation
     if (animationClass) {
       calendarView.classList.remove('slide-left', 'slide-right');
-      void calendarView.offsetWidth; // trigger reflow
+      void calendarView.offsetWidth; 
       calendarView.classList.add(animationClass);
     }
 
@@ -139,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('round-badge').textContent = `Round ${race.round}`;
     document.getElementById('circuit-name').textContent = race.Circuit.circuitName;
 
-    // Build sessions array
     currentSessions = [];
     if (race.FirstPractice) currentSessions.push({ name: 'Practice 1', time: new Date(`${race.FirstPractice.date}T${race.FirstPractice.time}`) });
     if (race.SecondPractice) currentSessions.push({ name: 'Practice 2', time: new Date(`${race.SecondPractice.date}T${race.SecondPractice.time}`) });
@@ -153,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderSessionsList();
     
-    // Find next session for countdown
     const now = new Date();
     let nextSession = currentSessions.find(s => s.time > now);
 
@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const row = document.createElement('div');
       row.className = `session-row ${isPast ? 'completed' : ''} ${isNext ? 'next-up' : ''}`;
+      row.title = "Click to view session details";
       
       let displayTime = '';
       let displayDate = '';
@@ -203,8 +204,51 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="session-date">${displayDate}</span>
         </div>
       `;
+
+      row.addEventListener('click', () => {
+        openSessionModal(session.name, race);
+      });
+
       listContainer.appendChild(row);
     });
+  }
+
+  function openSessionModal(sessionName, race) {
+    document.getElementById('modal-session-title').textContent = sessionName;
+    
+    let desc = "";
+    if (sessionName.includes('Practice')) desc = "Free Practice sessions allow teams to test car setups, evaluate tire degradation, and get drivers familiarized with the track conditions.";
+    else if (sessionName.includes('Qualifying')) desc = "Qualifying determines the starting grid for the race. It's split into three knockout segments (Q1, Q2, Q3) where the slowest drivers are eliminated.";
+    else if (sessionName.includes('Sprint')) desc = "The Sprint is a short, fast-paced dash with no mandatory pit stops. It awards points to the top finishers.";
+    else if (sessionName === 'Race') desc = "The main event! Drivers battle it out to claim victory and score maximum championship points.";
+
+    document.getElementById('modal-session-desc').textContent = desc;
+
+    if (sessionName === 'Race') {
+        storyContainer.style.display = 'block';
+        storyText.textContent = 'Fetching latest storylines...';
+        fetchStoryForRace(race.url);
+    } else {
+        storyContainer.style.display = 'none';
+    }
+
+    modal.classList.add('active');
+  }
+
+  async function fetchStoryForRace(wikiUrl) {
+    try {
+      const title = wikiUrl.split('/').pop();
+      const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${title}`);
+      const data = await response.json();
+      
+      if (data.extract) {
+        storyText.textContent = data.extract;
+      } else {
+        storyText.textContent = "No specific storylines available for this race yet.";
+      }
+    } catch (e) {
+      storyText.textContent = "Unable to fetch storylines.";
+    }
   }
 
   function startCountdown(targetDate) {
@@ -220,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cd-hours').textContent = '00';
         document.getElementById('cd-mins').textContent = '00';
         document.getElementById('cd-secs').textContent = '00';
-        // Refresh to move to next session
         renderRace(currentRaceIndex);
         return;
       }
@@ -282,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchStandings() {
     try {
-      // Fetch Drivers
+      // Drivers
       const dRes = await fetch('https://api.jolpi.ca/ergast/f1/current/driverStandings.json');
       const dData = await dRes.json();
       const drivers = dData.MRData.StandingsTable.StandingsLists[0].DriverStandings;
@@ -307,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dList.appendChild(row);
       });
 
-      // Fetch Constructors
+      // Constructors
       const cRes = await fetch('https://api.jolpi.ca/ergast/f1/current/constructorStandings.json');
       const cData = await cRes.json();
       const constructors = cData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
@@ -329,10 +372,61 @@ document.addEventListener('DOMContentLoaded', () => {
         cList.appendChild(row);
       });
 
+      // Populate Battles
+      populateBattles(drivers, constructors);
+
     } catch (error) {
       console.error('Error fetching standings:', error);
       document.getElementById('drivers-list').innerHTML = '<div class="table-row">Error loading data.</div>';
       document.getElementById('constructors-list').innerHTML = '<div class="table-row">Error loading data.</div>';
+      document.getElementById('driver-battle').innerHTML = '<p>Error loading battles.</p>';
+      document.getElementById('constructor-battle').innerHTML = '<p>Error loading battles.</p>';
+    }
+  }
+
+  function populateBattles(drivers, constructors) {
+    // Top 2 Drivers
+    if (drivers.length >= 2) {
+      const p1 = drivers[0];
+      const p2 = drivers[1];
+      const gap = parseInt(p1.points) - parseInt(p2.points);
+      const p1Color = getTeamColor(p1.Constructors[0] ? p1.Constructors[0].constructorId : '');
+      const p2Color = getTeamColor(p2.Constructors[0] ? p2.Constructors[0].constructorId : '');
+
+      document.getElementById('driver-battle').innerHTML = `
+        <div class="vs-row" style="border-left-color: ${p1Color}">
+          <div class="vs-name">${p1.Driver.familyName}</div>
+          <div class="vs-pts">${p1.points} pts</div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="vs-row" style="border-left-color: ${p2Color}">
+          <div class="vs-name">${p2.Driver.familyName}</div>
+          <div class="vs-pts">${p2.points} pts</div>
+        </div>
+        <div class="gap-text">Gap: ${gap} points</div>
+      `;
+    }
+
+    // Top 2 Constructors
+    if (constructors.length >= 2) {
+      const t1 = constructors[0];
+      const t2 = constructors[1];
+      const gap = parseInt(t1.points) - parseInt(t2.points);
+      const t1Color = getTeamColor(t1.Constructor.constructorId);
+      const t2Color = getTeamColor(t2.Constructor.constructorId);
+
+      document.getElementById('constructor-battle').innerHTML = `
+        <div class="vs-row" style="border-left-color: ${t1Color}">
+          <div class="vs-name">${t1.Constructor.name}</div>
+          <div class="vs-pts">${t1.points} pts</div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="vs-row" style="border-left-color: ${t2Color}">
+          <div class="vs-name">${t2.Constructor.name}</div>
+          <div class="vs-pts">${t2.points} pts</div>
+        </div>
+        <div class="gap-text">Gap: ${gap} points</div>
+      `;
     }
   }
 

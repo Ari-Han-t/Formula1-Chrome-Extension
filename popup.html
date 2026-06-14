@@ -11,13 +11,13 @@
     <header class="app-header">
       <div class="logo">
         <svg viewBox="0 0 110 30" width="80" height="22" xmlns="http://www.w3.org/2000/svg">
-          <!-- Actual F1 logo SVG approximation -->
           <path fill="#e10600" d="M37.8,11.2h28.1v6.5H37.8V11.2z M10.4,24.3L15.3,11.2H35L30,24.3H10.4z M45.8,11.2h20.1v6.5H45.8V11.2z M82.1,11.2h15v13.1H82.1V11.2z M53.8,24.3l4.9-13.1h19.7l-5,13.1H53.8z"/>
           <path fill="#ffffff" d="M2.3,24.3L7.3,11.2h19.6l-5,13.1H2.3z"/>
         </svg>
       </div>
       <nav class="tabs">
         <button class="tab-btn active" data-tab="tab-home">Calendar</button>
+        <button class="tab-btn" data-tab="tab-battles">Battles</button>
         <button class="tab-btn" data-tab="tab-drivers">Drivers</button>
         <button class="tab-btn" data-tab="tab-constructors">Teams</button>
       </nav>
@@ -73,6 +73,23 @@
         </div>
       </div>
 
+      <!-- BATTLES TAB -->
+      <div id="tab-battles" class="tab-pane">
+        <div class="glass-card battle-card">
+          <h3 class="battle-title">Drivers' Championship</h3>
+          <div id="driver-battle">
+             <div class="loading-spinner"></div>
+          </div>
+        </div>
+
+        <div class="glass-card battle-card">
+          <h3 class="battle-title">Constructors' Championship</h3>
+          <div id="constructor-battle">
+             <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- DRIVERS TAB -->
       <div id="tab-drivers" class="tab-pane">
         <div class="glass-card table-card">
@@ -101,6 +118,23 @@
         </div>
       </div>
     </main>
+
+    <!-- SESSION MODAL -->
+    <div class="modal-overlay" id="session-modal">
+      <div class="modal-content glass-card">
+        <div class="modal-header">
+          <h2 id="modal-session-title">Session</h2>
+          <button class="close-btn" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="modal-session-desc" class="modal-desc">Loading...</p>
+          <div id="modal-story-container" style="display: none;">
+            <h4 class="story-title">Main Story to Watch 📰</h4>
+            <p id="modal-story-text" class="modal-story">Fetching latest news...</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
