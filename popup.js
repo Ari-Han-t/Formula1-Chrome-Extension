@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const storyContainer = document.getElementById('modal-story-container');
   const storyText = document.getElementById('modal-story-text');
 
+  const resultsModal = document.getElementById('results-modal');
+  const resultsModalClose = document.getElementById('results-modal-close');
+  const viewResultsBtn = document.getElementById('view-results-btn');
+
   // State
   let races = [];
   let currentRaceIndex = 0;
@@ -100,6 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
     modalClose.addEventListener('click', () => {
       modal.classList.remove('active');
     });
+
+    resultsModalClose.addEventListener('click', () => {
+      resultsModal.classList.remove('active');
+    });
+
+    viewResultsBtn.addEventListener('click', () => {
+      resultsModal.classList.add('active');
+    });
   }
 
   async function fetchRaces() {
@@ -155,16 +167,27 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSessionsList();
     
     const now = new Date();
-    let nextSession = currentSessions.find(s => s.time > now);
+    const raceTime = new Date(`${race.date}T${race.time}`);
+    const isPast = raceTime < now;
 
-    if (nextSession) {
-      document.getElementById('session-badge').textContent = `${nextSession.name.toUpperCase()} UPCOMING`;
-      document.getElementById('session-badge').style.display = 'inline-block';
-      startCountdown(nextSession.time);
-    } else {
+    if (isPast) {
+      document.getElementById('countdown-container').style.display = 'none';
       document.getElementById('session-badge').textContent = 'WEEKEND COMPLETED';
-      document.getElementById('session-badge').style.display = 'inline-block';
+      document.getElementById('past-race-summary').style.display = 'flex';
       stopCountdown();
+      fetchRaceResults(race.round);
+    } else {
+      document.getElementById('countdown-container').style.display = 'flex';
+      document.getElementById('past-race-summary').style.display = 'none';
+      
+      let nextSession = currentSessions.find(s => s.time > now);
+      if (nextSession) {
+        document.getElementById('session-badge').textContent = `${nextSession.name.toUpperCase()} UPCOMING`;
+        startCountdown(nextSession.time);
+      } else {
+        document.getElementById('session-badge').textContent = 'WEEKEND COMPLETED';
+        stopCountdown();
+      }
     }
 
     fetchWikipediaInfo(race.Circuit.url);
@@ -248,6 +271,70 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       storyText.textContent = "Unable to fetch storylines.";
+    }
+  }
+
+  async function fetchRaceResults(round) {
+    try {
+      const listContainer = document.getElementById('full-results-list');
+      listContainer.innerHTML = '<div class="loading-spinner"></div>';
+
+      const response = await fetch(`https://api.jolpi.ca/ergast/f1/current/${round}/results.json`);
+      const data = await response.json();
+      
+      if (!data.MRData.RaceTable.Races || data.MRData.RaceTable.Races.length === 0) {
+         document.getElementById('podium-p1').textContent = 'N/A';
+         document.getElementById('podium-p2').textContent = 'N/A';
+         document.getElementById('podium-p3').textContent = 'N/A';
+         document.getElementById('fl-driver').textContent = 'N/A';
+         listContainer.innerHTML = '<div class="table-row">Results not yet available.</div>';
+         return;
+      }
+
+      const results = data.MRData.RaceTable.Races[0].Results;
+      
+      // Populate Podium
+      if (results.length > 0) document.getElementById('podium-p1').textContent = results[0].Driver.familyName;
+      if (results.length > 1) document.getElementById('podium-p2').textContent = results[1].Driver.familyName;
+      if (results.length > 2) document.getElementById('podium-p3').textContent = results[2].Driver.familyName;
+
+      // Find Fastest Lap
+      let flDriver = "N/A";
+      for (const res of results) {
+        if (res.FastestLap && res.FastestLap.rank === "1") {
+          flDriver = `${res.Driver.givenName} ${res.Driver.familyName} (${res.FastestLap.Time.time})`;
+          break;
+        }
+      }
+      document.getElementById('fl-driver').textContent = flDriver;
+
+      // Populate Full Results Table
+      listContainer.innerHTML = '';
+      results.forEach(res => {
+        const teamName = res.Constructor.name;
+        const color = getTeamColor(res.Constructor.constructorId);
+        let timeOrStatus = res.Time ? res.Time.time : res.status;
+
+        const row = document.createElement('div');
+        row.className = 'table-row';
+        row.innerHTML = `
+          <div style="background-color: ${color}; width: 3px; height: 30px; margin-right: 12px; border-radius: 2px;"></div>
+          <div class="col-pos">${res.position}</div>
+          <div class="col-main">
+            <span>${res.Driver.givenName} ${res.Driver.familyName}</span>
+            <span class="sub-text">${teamName}</span>
+          </div>
+          <div class="col-pts" style="display:flex; flex-direction:column; align-items:flex-end;">
+             <span>${timeOrStatus}</span>
+             <span class="sub-text">${res.points} pts</span>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+
+    } catch (error) {
+      console.error('Error fetching race results:', error);
+      document.getElementById('full-results-list').innerHTML = '<div class="table-row">Error loading results.</div>';
     }
   }
 

@@ -41,11 +41,24 @@
             <span class="badge" id="session-badge">UPCOMING</span>
           </div>
 
-          <div class="countdown-container">
+          <div class="countdown-container" id="countdown-container">
             <div class="time-box"><span class="number" id="cd-days">00</span><span class="label">Days</span></div>
             <div class="time-box"><span class="number" id="cd-hours">00</span><span class="label">Hrs</span></div>
             <div class="time-box"><span class="number" id="cd-mins">00</span><span class="label">Min</span></div>
             <div class="time-box"><span class="number" id="cd-secs">00</span><span class="label">Sec</span></div>
+          </div>
+
+          <div class="past-race-summary" id="past-race-summary" style="display: none;">
+            <div class="podium">
+              <div class="podium-pos p2"><span class="pos">P2</span><span class="podium-name" id="podium-p2">...</span></div>
+              <div class="podium-pos p1"><span class="pos">P1 🏆</span><span class="podium-name" id="podium-p1">...</span></div>
+              <div class="podium-pos p3"><span class="pos">P3</span><span class="podium-name" id="podium-p3">...</span></div>
+            </div>
+            <div class="fastest-lap-box">
+              <span class="fl-badge">⏱️ Fastest Lap:</span>
+              <span id="fl-driver" style="font-weight: 800; font-size: 13px;">...</span>
+            </div>
+            <button id="view-results-btn" class="view-results-btn">View Full Results</button>
           </div>
         </div>
 
@@ -144,6 +157,26 @@
           <div id="modal-story-container" style="display: none;">
             <h4 class="story-title">Main Story to Watch 📰</h4>
             <p id="modal-story-text" class="modal-story">Fetching latest news...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL RESULTS MODAL -->
+    <div class="modal-overlay" id="results-modal">
+      <div class="modal-content glass-card results-modal-content">
+        <div class="modal-header">
+          <h2 id="results-modal-title">Race Classification</h2>
+          <button class="close-btn" id="results-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="table-header">
+            <span class="col-pos">Pos</span>
+            <span class="col-main">Driver</span>
+            <span class="col-pts">Time/Pts</span>
+          </div>
+          <div class="table-body" id="full-results-list">
+            <div class="loading-spinner"></div>
           </div>
         </div>
       </div>

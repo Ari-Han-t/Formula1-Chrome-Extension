@@ -626,3 +626,97 @@ body {
   line-height: 1.5;
   margin-top: 16px;
 }
+/* Past Race Results UI */
+.past-race-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  height: 60px;
+  margin-top: 8px;
+}
+
+.podium-pos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px 6px 0 0;
+  padding: 4px;
+  width: 30%;
+  text-align: center;
+}
+
+.podium-pos .pos {
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.podium-pos.p1 {
+  height: 100%;
+  border-top: 3px solid #FFD700;
+  background: linear-gradient(to top, rgba(255,215,0,0.1), rgba(255,255,255,0.05));
+}
+.podium-pos.p2 {
+  height: 75%;
+  border-top: 3px solid #C0C0C0;
+}
+.podium-pos.p3 {
+  height: 60%;
+  border-top: 3px solid #CD7F32;
+}
+
+.podium-name {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.fastest-lap-box {
+  background: rgba(148, 0, 211, 0.15);
+  border: 1px solid rgba(148, 0, 211, 0.5);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fl-badge {
+  color: #d881ff;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.view-results-btn {
+  background: var(--f1-red);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-results-btn:hover {
+  background: #c00500;
+}
+
+.results-modal-content {
+  max-height: 90%;
+}
