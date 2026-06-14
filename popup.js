@@ -1,82 +1,210 @@
+const circuitTimezones = {
+  'albert_park': 'Australia/Melbourne',
+  'shanghai': 'Asia/Shanghai',
+  'suzuka': 'Asia/Tokyo',
+  'miami': 'America/New_York',
+  'villeneuve': 'America/Montreal',
+  'monaco': 'Europe/Monaco',
+  'catalunya': 'Europe/Madrid',
+  'red_bull_ring': 'Europe/Vienna',
+  'silverstone': 'Europe/London',
+  'spa': 'Europe/Brussels',
+  'hungaroring': 'Europe/Budapest',
+  'zandvoort': 'Europe/Amsterdam',
+  'monza': 'Europe/Rome',
+  'madring': 'Europe/Madrid',
+  'baku': 'Asia/Baku',
+  'marina_bay': 'Asia/Singapore',
+  'americas': 'America/Chicago',
+  'rodriguez': 'America/Mexico_City',
+  'interlagos': 'America/Sao_Paulo',
+  'vegas': 'America/Los_Angeles',
+  'losail': 'Asia/Qatar',
+  'yas_marina': 'Asia/Dubai',
+  'jeddah': 'Asia/Riyadh',
+  'bahrain': 'Asia/Bahrain',
+  'imola': 'Europe/Rome'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Navigation
+  // UI Elements
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
+  const prevRaceBtn = document.getElementById('prev-race-btn');
+  const nextRaceBtn = document.getElementById('next-race-btn');
+  const toggleLocalBtn = document.getElementById('toggle-local');
+  const toggleTrackBtn = document.getElementById('toggle-track');
+  const calendarView = document.getElementById('calendar-view');
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach(b => b.classList.remove('active'));
-      tabPanes.forEach(p => p.classList.remove('active'));
-      
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
-    });
-  });
-
-  // Data fetching and UI update
+  // State
+  let races = [];
+  let currentRaceIndex = 0;
   let countdownInterval;
+  let showLocalTime = true;
+  let currentSessions = [];
+
+  // Init
+  init();
 
   async function init() {
-    fetchNextRace();
+    setupListeners();
+    await fetchRaces();
     fetchStandings();
   }
 
-  async function fetchNextRace() {
+  function setupListeners() {
+    // Tabs
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanes.forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Calendar Navigation
+    prevRaceBtn.addEventListener('click', () => {
+      if (currentRaceIndex > 0) {
+        currentRaceIndex--;
+        renderRace(currentRaceIndex, 'slide-right');
+      }
+    });
+
+    nextRaceBtn.addEventListener('click', () => {
+      if (currentRaceIndex < races.length - 1) {
+        currentRaceIndex++;
+        renderRace(currentRaceIndex, 'slide-left');
+      }
+    });
+
+    // Time Toggle
+    toggleLocalBtn.addEventListener('click', () => {
+      showLocalTime = true;
+      toggleLocalBtn.classList.add('active');
+      toggleTrackBtn.classList.remove('active');
+      renderSessionsList();
+    });
+
+    toggleTrackBtn.addEventListener('click', () => {
+      showLocalTime = false;
+      toggleTrackBtn.classList.add('active');
+      toggleLocalBtn.classList.remove('active');
+      renderSessionsList();
+    });
+  }
+
+  async function fetchRaces() {
     try {
       const response = await fetch('https://api.jolpi.ca/ergast/f1/current.json');
       const data = await response.json();
-      const races = data.MRData.RaceTable.Races;
+      races = data.MRData.RaceTable.Races;
 
       const now = new Date();
-      let nextRace = null;
-      let nextSessionName = '';
-      let nextSessionTime = null;
+      
+      // Find the "current" race based on date (first race where Race time is in the future)
+      currentRaceIndex = races.findIndex(race => {
+        const raceTime = new Date(`${race.date}T${race.time}`);
+        return raceTime > now;
+      });
 
-      // Find the next session
-      for (const race of races) {
-        // Build sessions map
-        const sessions = [];
-        if (race.FirstPractice) sessions.push({ name: 'FP1', time: new Date(`${race.FirstPractice.date}T${race.FirstPractice.time}`) });
-        if (race.SecondPractice) sessions.push({ name: 'FP2', time: new Date(`${race.SecondPractice.date}T${race.SecondPractice.time}`) });
-        if (race.ThirdPractice) sessions.push({ name: 'FP3', time: new Date(`${race.ThirdPractice.date}T${race.ThirdPractice.time}`) });
-        if (race.SprintQualifying) sessions.push({ name: 'Sprint Shootout', time: new Date(`${race.SprintQualifying.date}T${race.SprintQualifying.time}`) });
-        if (race.Sprint) sessions.push({ name: 'Sprint', time: new Date(`${race.Sprint.date}T${race.Sprint.time}`) });
-        if (race.Qualifying) sessions.push({ name: 'Qualifying', time: new Date(`${race.Qualifying.date}T${race.Qualifying.time}`) });
-        sessions.push({ name: 'Race', time: new Date(`${race.date}T${race.time}`) });
+      // If season is over, show the last race
+      if (currentRaceIndex === -1) currentRaceIndex = races.length - 1;
 
-        // Sort by time
-        sessions.sort((a, b) => a.time - b.time);
-
-        // Find first future session
-        for (const session of sessions) {
-          if (session.time > now) {
-            nextRace = race;
-            nextSessionName = session.name;
-            nextSessionTime = session.time;
-            break;
-          }
-        }
-        
-        if (nextRace) break;
-      }
-
-      if (nextRace) {
-        document.getElementById('race-name').textContent = nextRace.raceName;
-        document.getElementById('session-badge').textContent = nextSessionName.toUpperCase();
-        document.getElementById('circuit-name').textContent = nextRace.Circuit.circuitName;
-        
-        startCountdown(nextSessionTime);
-        fetchWikipediaInfo(nextRace.Circuit.url);
-      } else {
-        document.getElementById('race-name').textContent = 'Season Over';
-        document.getElementById('session-badge').style.display = 'none';
-        document.getElementById('circuit-name').textContent = 'Check back next season!';
-      }
-
+      renderRace(currentRaceIndex);
     } catch (error) {
       console.error('Error fetching race data:', error);
-      document.getElementById('race-name').textContent = 'Error loading';
+      document.getElementById('race-name').textContent = 'Error loading calendar';
     }
+  }
+
+  function renderRace(index, animationClass = '') {
+    if (!races || races.length === 0) return;
+    
+    const race = races[index];
+    
+    // Update navigation buttons
+    prevRaceBtn.disabled = index === 0;
+    nextRaceBtn.disabled = index === races.length - 1;
+
+    // Apply animation
+    if (animationClass) {
+      calendarView.classList.remove('slide-left', 'slide-right');
+      void calendarView.offsetWidth; // trigger reflow
+      calendarView.classList.add(animationClass);
+    }
+
+    document.getElementById('race-name').textContent = race.raceName;
+    document.getElementById('round-badge').textContent = `Round ${race.round}`;
+    document.getElementById('circuit-name').textContent = race.Circuit.circuitName;
+
+    // Build sessions array
+    currentSessions = [];
+    if (race.FirstPractice) currentSessions.push({ name: 'Practice 1', time: new Date(`${race.FirstPractice.date}T${race.FirstPractice.time}`) });
+    if (race.SecondPractice) currentSessions.push({ name: 'Practice 2', time: new Date(`${race.SecondPractice.date}T${race.SecondPractice.time}`) });
+    if (race.ThirdPractice) currentSessions.push({ name: 'Practice 3', time: new Date(`${race.ThirdPractice.date}T${race.ThirdPractice.time}`) });
+    if (race.SprintQualifying) currentSessions.push({ name: 'Sprint Quali', time: new Date(`${race.SprintQualifying.date}T${race.SprintQualifying.time}`) });
+    if (race.Sprint) currentSessions.push({ name: 'Sprint', time: new Date(`${race.Sprint.date}T${race.Sprint.time}`) });
+    if (race.Qualifying) currentSessions.push({ name: 'Qualifying', time: new Date(`${race.Qualifying.date}T${race.Qualifying.time}`) });
+    currentSessions.push({ name: 'Race', time: new Date(`${race.date}T${race.time}`) });
+
+    currentSessions.sort((a, b) => a.time - b.time);
+
+    renderSessionsList();
+    
+    // Find next session for countdown
+    const now = new Date();
+    let nextSession = currentSessions.find(s => s.time > now);
+
+    if (nextSession) {
+      document.getElementById('session-badge').textContent = `${nextSession.name.toUpperCase()} UPCOMING`;
+      document.getElementById('session-badge').style.display = 'inline-block';
+      startCountdown(nextSession.time);
+    } else {
+      document.getElementById('session-badge').textContent = 'WEEKEND COMPLETED';
+      document.getElementById('session-badge').style.display = 'inline-block';
+      stopCountdown();
+    }
+
+    fetchWikipediaInfo(race.Circuit.url);
+  }
+
+  function renderSessionsList() {
+    const listContainer = document.getElementById('sessions-list');
+    listContainer.innerHTML = '';
+    
+    const now = new Date();
+    const race = races[currentRaceIndex];
+    const trackTz = circuitTimezones[race.Circuit.circuitId] || 'UTC';
+
+    currentSessions.forEach(session => {
+      const isPast = session.time < now;
+      const isNext = !isPast && (currentSessions.find(s => s.time > now) === session);
+      
+      const row = document.createElement('div');
+      row.className = `session-row ${isPast ? 'completed' : ''} ${isNext ? 'next-up' : ''}`;
+      
+      let displayTime = '';
+      let displayDate = '';
+
+      if (showLocalTime) {
+        displayTime = session.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        displayDate = session.time.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      } else {
+        displayTime = session.time.toLocaleTimeString('en-US', { timeZone: trackTz, hour: '2-digit', minute: '2-digit', hour12: true });
+        displayDate = session.time.toLocaleDateString('en-US', { timeZone: trackTz, weekday: 'short', month: 'short', day: 'numeric' });
+      }
+
+      row.innerHTML = `
+        <div class="session-name">${session.name}</div>
+        <div class="session-time">
+          <span>${displayTime}</span>
+          <span class="session-date">${displayDate}</span>
+        </div>
+      `;
+      listContainer.appendChild(row);
+    });
   }
 
   function startCountdown(targetDate) {
@@ -92,6 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cd-hours').textContent = '00';
         document.getElementById('cd-mins').textContent = '00';
         document.getElementById('cd-secs').textContent = '00';
+        // Refresh to move to next session
+        renderRace(currentRaceIndex);
         return;
       }
 
@@ -110,6 +240,14 @@ document.addEventListener('DOMContentLoaded', () => {
     countdownInterval = setInterval(updateUI, 1000);
   }
 
+  function stopCountdown() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    document.getElementById('cd-days').textContent = '00';
+    document.getElementById('cd-hours').textContent = '00';
+    document.getElementById('cd-mins').textContent = '00';
+    document.getElementById('cd-secs').textContent = '00';
+  }
+
   async function fetchWikipediaInfo(wikiUrl) {
     try {
       const title = wikiUrl.split('/').pop();
@@ -118,22 +256,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const trackImg = document.getElementById('track-image');
       const trackFact = document.getElementById('track-fact');
+      const imgWrapper = document.querySelector('.img-wrapper');
 
       if (data.thumbnail && data.thumbnail.source) {
         trackImg.src = data.thumbnail.source;
         trackImg.style.display = 'block';
+        imgWrapper.style.display = 'flex';
       } else {
-        document.querySelector('.img-wrapper').style.display = 'none';
+        trackImg.style.display = 'none';
+        imgWrapper.style.display = 'none';
       }
 
       if (data.extract) {
-        // limit to ~150 chars
         const summary = data.extract.length > 150 ? data.extract.substring(0, 147) + '...' : data.extract;
         trackFact.textContent = summary;
+      } else {
+        trackFact.textContent = "Circuit details unavailable.";
       }
     } catch (error) {
       console.error('Error fetching Wiki data:', error);
       document.getElementById('track-fact').textContent = 'Unable to fetch circuit details.';
+      document.querySelector('.img-wrapper').style.display = 'none';
     }
   }
 
@@ -210,6 +353,4 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     return colors[constructorId] || '#ffffff';
   }
-
-  init();
 });

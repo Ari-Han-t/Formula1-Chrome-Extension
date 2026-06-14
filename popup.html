@@ -10,28 +10,55 @@
   <div class="app-container">
     <header class="app-header">
       <div class="logo">
-        <span class="f1-red">F1</span> DASH
+        <svg viewBox="0 0 110 30" width="80" height="22" xmlns="http://www.w3.org/2000/svg">
+          <!-- Actual F1 logo SVG approximation -->
+          <path fill="#e10600" d="M37.8,11.2h28.1v6.5H37.8V11.2z M10.4,24.3L15.3,11.2H35L30,24.3H10.4z M45.8,11.2h20.1v6.5H45.8V11.2z M82.1,11.2h15v13.1H82.1V11.2z M53.8,24.3l4.9-13.1h19.7l-5,13.1H53.8z"/>
+          <path fill="#ffffff" d="M2.3,24.3L7.3,11.2h19.6l-5,13.1H2.3z"/>
+        </svg>
       </div>
       <nav class="tabs">
-        <button class="tab-btn active" data-tab="tab-home">Race</button>
+        <button class="tab-btn active" data-tab="tab-home">Calendar</button>
         <button class="tab-btn" data-tab="tab-drivers">Drivers</button>
         <button class="tab-btn" data-tab="tab-constructors">Teams</button>
       </nav>
     </header>
 
     <main class="content">
-      <!-- HOME TAB -->
+      <!-- CALENDAR TAB -->
       <div id="tab-home" class="tab-pane active">
-        <div class="glass-card next-race-card">
-          <div class="card-header">
-            <h2 id="race-name">Loading...</h2>
+        
+        <div class="glass-card next-race-card" id="calendar-view">
+          <div class="card-header nav-header">
+            <button class="nav-btn" id="prev-race-btn" title="Previous Race">&#10094;</button>
+            <div class="race-header-info">
+              <span class="round-badge" id="round-badge">R1</span>
+              <h2 id="race-name">Loading...</h2>
+            </div>
+            <button class="nav-btn" id="next-race-btn" title="Next Race">&#10095;</button>
+          </div>
+          
+          <div class="session-badge-container">
             <span class="badge" id="session-badge">UPCOMING</span>
           </div>
+
           <div class="countdown-container">
             <div class="time-box"><span class="number" id="cd-days">00</span><span class="label">Days</span></div>
             <div class="time-box"><span class="number" id="cd-hours">00</span><span class="label">Hrs</span></div>
             <div class="time-box"><span class="number" id="cd-mins">00</span><span class="label">Min</span></div>
             <div class="time-box"><span class="number" id="cd-secs">00</span><span class="label">Sec</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card sessions-card">
+          <div class="sessions-header">
+            <h3 class="track-title">Session Schedule</h3>
+            <div class="timing-toggle">
+              <button class="toggle-btn active" id="toggle-local">Your Time</button>
+              <button class="toggle-btn" id="toggle-track">Track Time</button>
+            </div>
+          </div>
+          <div class="sessions-list" id="sessions-list">
+            <!-- Sessions injected via JS -->
           </div>
         </div>
 

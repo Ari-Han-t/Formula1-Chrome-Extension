@@ -37,14 +37,9 @@ body {
 }
 
 .logo {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 1px;
   margin-bottom: 12px;
-}
-
-.f1-red {
-  color: var(--f1-red);
+  display: flex;
+  align-items: center;
 }
 
 .tabs {
@@ -115,6 +110,19 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-left { animation: slideLeft 0.3s ease; }
+.slide-right { animation: slideRight 0.3s ease; }
+
 .glass-card {
   background: var(--surface-color);
   backdrop-filter: blur(10px);
@@ -123,18 +131,68 @@ body {
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card-header {
+.glass-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.nav-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.card-header h2 {
+.nav-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.race-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.round-badge {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.race-header-info h2 {
   font-size: 16px;
   font-weight: 600;
+  margin: 0;
+}
+
+.session-badge-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
 .badge {
@@ -177,9 +235,84 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* Sessions Timeline */
+.sessions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.timing-toggle {
+  display: flex;
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+  background: var(--surface-color);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+}
+
+.session-row.completed {
+  opacity: 0.5;
+}
+
+.session-row.next-up {
+  background: rgba(255,255,255,0.06);
+  border-left-color: var(--f1-red);
+}
+
+.session-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.session-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.session-date {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Track Card */
 .track-title {
   font-size: 14px;
-  margin-bottom: 12px;
   color: var(--text-secondary);
 }
 
@@ -187,6 +320,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 12px;
 }
 
 .img-wrapper {
@@ -210,6 +344,7 @@ body {
   color: var(--text-secondary);
 }
 
+/* Tables */
 .table-card {
   padding: 0;
 }
