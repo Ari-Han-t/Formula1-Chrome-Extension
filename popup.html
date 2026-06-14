@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live F1 Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo">
+        <span class="f1-red">F1</span> DASH
+      </div>
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="tab-home">Race</button>
+        <button class="tab-btn" data-tab="tab-drivers">Drivers</button>
+        <button class="tab-btn" data-tab="tab-constructors">Teams</button>
+      </nav>
+    </header>
+
+    <main class="content">
+      <!-- HOME TAB -->
+      <div id="tab-home" class="tab-pane active">
+        <div class="glass-card next-race-card">
+          <div class="card-header">
+            <h2 id="race-name">Loading...</h2>
+            <span class="badge" id="session-badge">UPCOMING</span>
+          </div>
+          <div class="countdown-container">
+            <div class="time-box"><span class="number" id="cd-days">00</span><span class="label">Days</span></div>
+            <div class="time-box"><span class="number" id="cd-hours">00</span><span class="label">Hrs</span></div>
+            <div class="time-box"><span class="number" id="cd-mins">00</span><span class="label">Min</span></div>
+            <div class="time-box"><span class="number" id="cd-secs">00</span><span class="label">Sec</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card track-card">
+          <h3 class="track-title" id="circuit-name">Circuit Info</h3>
+          <div class="track-info">
+            <div class="img-wrapper">
+               <img id="track-image" src="" alt="Track Layout" class="track-img" style="display: none;">
+            </div>
+            <p id="track-fact" class="track-fact">Fetching circuit data...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRIVERS TAB -->
+      <div id="tab-drivers" class="tab-pane">
+        <div class="glass-card table-card">
+          <div class="table-header">
+            <span class="col-pos">Pos</span>
+            <span class="col-main">Driver</span>
+            <span class="col-pts">Pts</span>
+          </div>
+          <div class="table-body" id="drivers-list">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONSTRUCTORS TAB -->
+      <div id="tab-constructors" class="tab-pane">
+        <div class="glass-card table-card">
+          <div class="table-header">
+            <span class="col-pos">Pos</span>
+            <span class="col-main">Team</span>
+            <span class="col-pts">Pts</span>
+          </div>
+          <div class="table-body" id="constructors-list">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

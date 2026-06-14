@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Live F1 Dashboard",
+  "version": "1.0",
+  "description": "Live F1 countdowns, schedules, drivers and constructors standings.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "https://api.jolpi.ca/*",
+    "https://en.wikipedia.org/*"
+  ]
+}
