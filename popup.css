@@ -583,3 +583,46 @@ body {
 .session-row:hover {
   background: rgba(255,255,255,0.06);
 }
+/* Predictor */
+.pred-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pred-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pred-prob {
+  color: var(--f1-red);
+  font-weight: 800;
+}
+
+.pred-bar-bg {
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pred-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.disclaimer-box {
+  background: rgba(255, 200, 0, 0.1);
+  border-left: 3px solid #ffc107;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #e0e0e0;
+  line-height: 1.5;
+  margin-top: 16px;
+}

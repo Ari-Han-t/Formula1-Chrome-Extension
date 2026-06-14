@@ -375,6 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Populate Battles
       populateBattles(drivers, constructors);
 
+      // Populate Predictions
+      calculatePredictions(drivers);
+
     } catch (error) {
       console.error('Error fetching standings:', error);
       document.getElementById('drivers-list').innerHTML = '<div class="table-row">Error loading data.</div>';
@@ -428,6 +431,67 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="gap-text">Gap: ${gap} points</div>
       `;
     }
+  }
+
+  function calculatePredictions(drivers) {
+    const list = document.getElementById('prediction-list');
+    list.innerHTML = '';
+
+    if (!drivers || drivers.length < 5) {
+      list.innerHTML = '<p>Not enough data for predictions.</p>';
+      return;
+    }
+
+    // Take top 5
+    const top5 = drivers.slice(0, 5);
+    
+    // Add weights: Current points + slight chaos factor
+    let totalScore = 0;
+    const scoredDrivers = top5.map((d, index) => {
+      // The leader gets a slight baseline boost based on position (e.g. P1 gets +20, P2 gets +15)
+      const positionWeight = (5 - index) * 5; 
+      // Chaos factor: random number between 0 and 20
+      const chaos = Math.floor(Math.random() * 20);
+      
+      const rawScore = parseInt(d.points) + positionWeight + chaos;
+      totalScore += rawScore;
+      
+      return {
+        driver: d,
+        score: rawScore
+      };
+    });
+
+    // We sort again just in case the chaos factor shuffled the order slightly
+    scoredDrivers.sort((a, b) => b.score - a.score);
+
+    // Calculate percentages and render
+    scoredDrivers.forEach(sd => {
+      const percentage = Math.round((sd.score / totalScore) * 100);
+      const teamId = sd.driver.Constructors[0] ? sd.driver.Constructors[0].constructorId : '';
+      const color = getTeamColor(teamId);
+
+      const row = document.createElement('div');
+      row.className = 'pred-row';
+      row.innerHTML = `
+        <div class="pred-header">
+          <span>${sd.driver.Driver.givenName} ${sd.driver.Driver.familyName}</span>
+          <span class="pred-prob">${percentage}%</span>
+        </div>
+        <div class="pred-bar-bg">
+          <div class="pred-bar-fill" style="background-color: ${color}; width: 0%;" data-width="${percentage}%"></div>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    // Animate bars after a short delay
+    setTimeout(() => {
+      const bars = list.querySelectorAll('.pred-bar-fill');
+      bars.forEach(bar => {
+        bar.style.width = bar.getAttribute('data-width');
+      });
+    }, 100);
   }
 
   function getTeamColor(constructorId) {
